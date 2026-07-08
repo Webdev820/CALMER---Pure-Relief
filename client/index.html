@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CALMER - Pure Relief | Breathe, Unwind, Elevate</title>
+  <meta name="description" content="Premium cannabis wellness delivery. Lab-tested products, eco-friendly bicycle delivery. Discreet. Professional. Trusted." />
+  <link rel="icon" type="image/jpeg" href="/assets/logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'deep-black': '#0A0A0A', 'rich-gold': '#FFD700', 'warm-amber': '#FFC107',
+            'dark-surface': '#111111', 'cream': '#C9C3B5', 'muted': '#8D8D8D',
+            'success': '#39D98A', 'alert': '#FF5C5C'
+          },
+          fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['Inter', 'sans-serif'], script: ['"Great Vibes"', 'cursive'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#0A0A0A]">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

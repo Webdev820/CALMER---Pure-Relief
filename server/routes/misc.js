@@ -6,10 +6,15 @@ const router = express.Router();
 
 /* ============ PAYMENTS (PayPal-style simulation; swap in live PayPal SDK creds in production) ============ */
 router.post('/payments/create-intent', auth, async (req, res) => {
-  const { orderId } = req.body;
-  const order = await Order.findById(orderId);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-  res.json({ intentId: `PAYPAL-INT-${order._id}`, amount: order.totalAmount, currency: 'USD' });
+  try {
+    const { orderId } = req.body;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    // Ownership: only the order's client (or an admin) may create a payment intent
+    if (req.user.role !== 'admin' && String(order.clientId) !== req.user.id)
+      return res.status(403).json({ error: 'Access denied' });
+    res.json({ intentId: `PAYPAL-INT-${order._id}`, amount: order.totalAmount, currency: 'USD' });
+  } catch { res.status(400).json({ error: 'Invalid order id' }); }
 });
 
 router.post('/payments/confirm', auth, async (req, res) => {
@@ -17,6 +22,14 @@ router.post('/payments/confirm', auth, async (req, res) => {
     const { orderId, paymentMethod = 'paypal' } = req.body;
     const order = await Order.findById(orderId).populate('clientId', 'username');
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    // Ownership: a client can only pay for their own order
+    if (req.user.role !== 'admin' && String(order.clientId._id) !== req.user.id)
+      return res.status(403).json({ error: 'Access denied' });
+    // Idempotency: never double-fire admin alerts / re-process a paid order
+    if (order.paymentStatus === 'paid')
+      return res.json({ success: true, message: 'Order already paid.', order });
+    if (!['paypal', 'card', 'cash'].includes(paymentMethod))
+      return res.status(400).json({ error: 'Invalid payment method' });
     order.paymentStatus = 'paid';
     order.deliveryStatus = 'processing';
     order.paymentMethod = paymentMethod;
@@ -65,8 +78,15 @@ router.get('/notifications', auth, async (req, res) => {
 });
 
 router.put('/notifications/:id/read', auth, async (req, res) => {
-  await Notification.findByIdAndUpdate(req.params.id, { read: true });
-  res.json({ ok: true });
+  try {
+    // Ownership: only mark your own (or broadcast/admin-scoped when admin) notifications
+    const q = req.user.role === 'admin'
+      ? { _id: req.params.id, $or: [{ 'meta.forAdmin': true }, { recipientId: req.user.id }] }
+      : { _id: req.params.id, $or: [{ recipientId: req.user.id }, { broadcast: true }] };
+    const n = await Notification.findOneAndUpdate(q, { read: true });
+    if (!n) return res.status(404).json({ error: 'Notification not found' });
+    res.json({ ok: true });
+  } catch { res.status(400).json({ error: 'Invalid id' }); }
 });
 
 router.post('/notifications/send', auth, adminOnly, async (req, res) => {
@@ -102,6 +122,8 @@ router.get('/chats/:orderId', auth, async (req, res) => {
 router.post('/chats/:orderId', auth, async (req, res) => {
   try {
     const { message, type = 'text' } = req.body;
+    if (!message || !String(message).trim()) return res.status(400).json({ error: 'Message cannot be empty' });
+    if (String(message).length > 2000) return res.status(400).json({ error: 'Message too long (max 2000 chars)' });
     let convo = await Conversation.findOne({ orderId: req.params.orderId });
     if (!convo) {
       const order = await Order.findById(req.params.orderId);
@@ -111,7 +133,8 @@ router.post('/chats/:orderId', auth, async (req, res) => {
     if (req.user.role !== 'admin' && String(convo.clientId) !== req.user.id)
       return res.status(403).json({ error: 'Access denied' });
 
-    const msg = { senderId: req.user.id, senderName: req.user.username, message, type, timestamp: new Date() };
+    const safeType = req.user.role === 'admin' ? type : 'text'; // clients cannot forge system/call messages
+    const msg = { senderId: req.user.id, senderName: req.user.username, message: String(message).trim(), type: safeType, timestamp: new Date() };
     convo.messages.push(msg);
     await convo.save();
 
@@ -126,7 +149,7 @@ router.post('/chats/:orderId', auth, async (req, res) => {
 });
 
 /* ============ CALLS (WebRTC signaling bootstrap) ============ */
-router.post('/calls/initiate', auth, async (req, res) => {
+router.post('/calls/initiate', auth, adminOnly, async (req, res) => {
   const { orderId } = req.body;
   const convo = await Conversation.findOne({ orderId });
   if (!convo) return res.status(404).json({ error: 'Conversation not found' });

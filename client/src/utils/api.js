@@ -15,10 +15,14 @@ api.interceptors.request.use(cfg => {
 
 api.interceptors.response.use(r => r, err => {
   if (err.response?.status === 401 && !err.config.url.includes('/auth/')) {
+    // Session expired — send admins to the ADMIN portal, not the client login
+    let wasAdmin = false
+    try { wasAdmin = JSON.parse(localStorage.getItem('calmer_user'))?.role === 'admin' } catch { }
     localStorage.removeItem('calmer_token')
     localStorage.removeItem('calmer_user')
-    window.location.href = '/login'
+    window.location.href = wasAdmin ? '/admin-login' : '/login'
   }
+  if (!err.response) err.friendly = 'Network issue — check your connection and try again'
   return Promise.reject(err)
 })
 

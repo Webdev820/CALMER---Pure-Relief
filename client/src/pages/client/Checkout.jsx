@@ -50,7 +50,8 @@ export default function Checkout() {
       setDone(data.order)
       if (!pinned) setShowPinPrompt(true)
     } catch (err) {
-      toast('Payment Failed', err.response?.data?.error || 'Try again', 'error')
+      const msg = err.response?.data?.error || err.friendly || 'Try again'
+      toast(err.response?.status === 409 ? 'Stock Update' : 'Payment Failed', msg, 'error')
     } finally { setBusy(false) }
   }
 

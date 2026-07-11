@@ -4,6 +4,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useApp } from '../context/AppContext'
 import { Logo } from '../components/Shared'
+import InstallAppButton from '../components/InstallApp'
 import { Leaf, Bike, Flask, Support, Cart, Lock, Star, Menu, X, Shield } from '../utils/icons'
 import api from '../utils/api'
 
@@ -105,6 +106,7 @@ export default function Landing() {
             ))}
           </ul>
           <div className="flex items-center gap-3">
+            <InstallAppButton variant="compact" className="hidden lg:flex" />
             <button onClick={orderNow} className="btn-gold px-6 py-2.5 text-sm hidden sm:block">Order Now</button>
             <button className="md:hidden text-[#FFD700]" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
               {menuOpen ? <X /> : <Menu />}
@@ -117,6 +119,7 @@ export default function Landing() {
               <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMenuOpen(false)} className="block text-cream hover:text-[#FFD700]">{l}</a>
             ))}
             <button onClick={orderNow} className="btn-gold w-full py-3">Order Now</button>
+            <InstallAppButton variant="bar" />
           </div>
         )}
       </header>
@@ -136,6 +139,10 @@ export default function Landing() {
             <div className="hero-anim flex flex-wrap gap-4 mt-9">
               <button onClick={orderNow} className="btn-gold glow-pulse px-8 py-4 text-base">Explore Products</button>
               <a href="#how-it-works" className="btn-outline px-8 py-4 text-base">How CALMER Works</a>
+            </div>
+            <div className="hero-anim mt-5 max-w-md">
+              <InstallAppButton variant="hero" className="w-full" />
+              <p className="text-muted text-[11px] text-center mt-2 tracking-wide">Free • Works offline • Live order alerts • iPhone & Android</p>
             </div>
           </div>
           <div className="relative">

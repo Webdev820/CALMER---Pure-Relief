@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CALMER — You're Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 30%, #171204 0%, #0A0A0A 65%);
+      color: #C9C3B5; font-family: Georgia, 'Times New Roman', serif; text-align: center; padding: 24px;
+    }
+    .card {
+      max-width: 420px; padding: 48px 36px; border-radius: 28px;
+      background: rgba(17,17,17,.8); border: 1px solid rgba(255,215,0,.3);
+      box-shadow: 0 24px 80px rgba(0,0,0,.7), 0 0 60px rgba(255,215,0,.08);
+    }
+    img { width: 96px; height: 96px; border-radius: 50%; border: 2px solid rgba(255,215,0,.5); object-fit: cover;
+      animation: breathe 5s ease-in-out infinite; }
+    @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+    h1 { margin-top: 20px; font-size: 30px;
+      background: linear-gradient(120deg,#f5d97b,#FFD700 40%,#a87c1f 70%,#ffe9a3);
+      -webkit-background-clip: text; background-clip: text; color: transparent; }
+    p { margin-top: 14px; font-size: 14px; line-height: 1.7; font-family: Arial, sans-serif; }
+    .tag { font-size: 10px; letter-spacing: .35em; text-transform: uppercase; margin-top: 6px; color: #8D8D8D; }
+    button {
+      margin-top: 28px; padding: 14px 40px; border: none; border-radius: 9999px; cursor: pointer;
+      background: linear-gradient(90deg,#FFD700,#FFC107); color: #0A0A0A; font-weight: 700; font-size: 14px;
+      font-family: Arial, sans-serif; transition: transform .3s, box-shadow .3s;
+    }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,215,0,.5); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img src="/icons/icon-192.png" alt="CALMER" onerror="this.style.display='none'" />
+    <h1>Breathe. You're Offline.</h1>
+    <p class="tag">CALMER — Pure Relief</p>
+    <p>Your connection drifted away for a moment. Take a deep breath — your cart and session are safe, and we'll reconnect you the second your network returns.</p>
+    <button onclick="location.reload()">RECONNECT</button>
+  </main>
+  <script>window.addEventListener('online', () => location.reload());</script>
+</body>
+</html>

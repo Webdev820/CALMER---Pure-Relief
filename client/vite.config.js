@@ -11,5 +11,18 @@ export default defineConfig({
       '/socket.io': { target: 'http://localhost:5000', ws: true }
     }
   },
-  build: { outDir: 'dist' }
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        // Split heavy libs into cacheable chunks — first paint no longer waits for maps/animation libs
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', 'axios'],
+          map: ['leaflet'],
+          motion: ['gsap'],
+          realtime: ['socket.io-client']
+        }
+      }
+    }
+  }
 })

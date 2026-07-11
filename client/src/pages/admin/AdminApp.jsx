@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext.jsx'
 import { Logo } from '../../components/Shared.jsx'
+import InstallAppButton from '../../components/InstallApp.jsx'
 import { Home, Box, Chat, MapI, ChartI, Gear, Logout, Menu, X, Bell, Leaf, Crown } from '../../utils/icons.jsx'
 import Overview from './Overview.jsx'
 import AdminOrders from './AdminOrders.jsx'
@@ -41,6 +42,7 @@ function Sidebar({ mobile, onClose, user, notifCount, onLogout }) {
         ))}
       </nav>
       <div className="p-4 border-t border-[rgba(255,215,0,0.12)]">
+        <div className="mb-3"><InstallAppButton variant="bar" /></div>
         <div className="flex items-center gap-3 mb-3">
           <img src="/assets/profile.jpg" alt="admin avatar" className="w-9 h-9 rounded-full object-cover border border-rich-gold" />
           <div className="min-w-0">

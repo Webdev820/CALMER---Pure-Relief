@@ -19,9 +19,10 @@ export function AppProvider({ children }) {
 
   const toast = useCallback((title, message, type = 'info') => {
     const id = Date.now() + Math.random()
-    setToasts(t => [...t, { id, title, message, type }])
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 5000)
+    setToasts(t => [...t.slice(-4), { id, title, message, type }]) // cap at 5 visible — no toast avalanche
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), type === 'error' ? 7000 : 5000)
   }, [])
+  const dismissToast = useCallback(id => setToasts(t => t.filter(x => x.id !== id)), [])
 
   const login = (data) => {
     localStorage.setItem('calmer_token', data.token)
@@ -53,8 +54,12 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!user) return
     const token = localStorage.getItem('calmer_token')
-    const s = io(API_BASE || '/', { auth: { token } })
+    const s = io(API_BASE || '/', { auth: { token }, reconnectionAttempts: 20, reconnectionDelayMax: 8000 })
     socketRef.current = s
+    s.on('connect_error', err => {
+      // JWT expired mid-session → socket auth fails forever; log out cleanly instead of silent retry loop
+      if (/token|auth/i.test(err?.message || '')) { s.disconnect() }
+    })
 
     s.on('notification', n => { setNotifCount(c => c + 1); toast(n.title || 'CALMER', n.message, 'gold') })
     s.on('order_update', n => { setNotifCount(c => c + 1); toast('Order Update', n.message, 'gold') })
@@ -85,7 +90,7 @@ export function AppProvider({ children }) {
   return (
     <Ctx.Provider value={{
       user, login, logout, cart, addToCart, setQty, clearCart,
-      toast, toasts, notifCount, setNotifCount,
+      toast, toasts, dismissToast, notifCount, setNotifCount,
       socket: () => socketRef.current, incomingCall, setIncomingCall, api
     }}>
       {children}

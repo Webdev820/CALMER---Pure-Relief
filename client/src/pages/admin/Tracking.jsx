@@ -76,6 +76,7 @@ export default function Tracking() {
     if (!s) return
     s.emit('admin_location_update', {
       orderId: order._id,
+      clientUserId: order.clientId?._id || order.clientId, // target only this order's client (privacy)
       latitude: p.lat, longitude: p.lng,
       clientLat: c?.lat, clientLng: c?.lng,
       speedKmh: AVG_SPEED_KMH
@@ -86,7 +87,7 @@ export default function Tracking() {
     if (!sel) return
     if (!sel.liveLocation?.pinned) toast('No Pinned Location', 'Client has not pinned a live location yet — route line will appear once they pin.', 'info')
     setTracking(true)
-    const s = socket(); s && s.emit('delivery_started', { orderId: sel._id })
+    const s = socket(); s && s.emit('delivery_started', { orderId: sel._id, clientUserId: sel.clientId?._id || sel.clientId })
     tick(sel)
     pollRef.current = setInterval(() => tick(sel), 5000)
     toast('Live Tracking Started', `Broadcasting courier position for ${sel.orderNumber} every 5 seconds`, 'gold')

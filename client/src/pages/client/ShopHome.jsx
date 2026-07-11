@@ -59,7 +59,9 @@ export default function ShopHome() {
               <div className="img-zoom h-52 relative">
                 <img src={p.imageUrl || CAT_IMG[p.category] || '/assets/products/cat-flower.jpg'} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                 {p.isNewArrival && <span className="absolute top-3 left-3 badge gold-grad">NEW</span>}
-                {p.stock <= 5 && <span className="absolute top-3 right-3 badge bg-[#FF5C5C]/80 text-white">LOW STOCK</span>}
+                {p.stock === 0
+                  ? <span className="absolute top-3 right-3 badge bg-black/80 text-[#FF5C5C] border border-[#FF5C5C]/60">SOLD OUT</span>
+                  : p.stock <= 5 && <span className="absolute top-3 right-3 badge bg-[#FF5C5C]/80 text-white">LOW STOCK · {p.stock} LEFT</span>}
               </div>
               <div className="p-5">
                 <h3 className="font-serif text-lg gold-text font-bold leading-snug">{p.name}</h3>
@@ -71,8 +73,14 @@ export default function ShopHome() {
                 <div className="flex items-center justify-between mt-4 gap-2">
                   <span className="text-2xl gold-text font-bold">${p.price}</span>
                   <div className="flex gap-2">
-                    <button onClick={() => addToCart(p)} className="btn-outline px-3.5 py-2 text-xs">ADD TO CART</button>
-                    <button onClick={() => nav(`/shop/checkout?product=${p._id}`)} className="btn-gold px-3.5 py-2 text-xs">ORDER NOW</button>
+                    {p.stock === 0 ? (
+                      <span className="px-4 py-2 text-xs rounded-full border border-[#FF5C5C]/40 text-[#FF5C5C] font-semibold">SOLD OUT</span>
+                    ) : (
+                      <>
+                        <button onClick={() => addToCart(p)} className="btn-outline px-3.5 py-2 text-xs">ADD TO CART</button>
+                        <button onClick={() => nav(`/shop/checkout?product=${p._id}`)} className="btn-gold px-3.5 py-2 text-xs">ORDER NOW</button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

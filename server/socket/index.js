@@ -27,31 +27,34 @@ module.exports = function initSocket(io) {
     socket.join(`user:${u.id}`);
     socket.join(u.role === 'admin' ? 'admins' : 'clients');
 
-    // Admin live position broadcast during delivery
-    socket.on('admin_location_update', ({ orderId, latitude, longitude, clientLat, clientLng, speedKmh = 15 }) => {
+    // Admin live position broadcast during delivery.
+    // PRIVACY: courier position + proximity alert go ONLY to the order's own client
+    // (a naive broadcast to the 'clients' room leaks every delivery route to everyone).
+    socket.on('admin_location_update', ({ orderId, clientUserId, latitude, longitude, clientLat, clientLng, speedKmh = 15 }) => {
       if (u.role !== 'admin') return;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
       io.to('admins').emit('admin_position', { orderId, latitude, longitude });
-      // relay to the tracked client too
-      socket.to('clients').emit('courier_position', { orderId, latitude, longitude });
+      if (clientUserId) io.to(`user:${clientUserId}`).emit('courier_position', { orderId, latitude, longitude });
 
-      // 5-minute proximity alert
+      // 5-minute proximity alert (targeted)
       if (clientLat != null && clientLng != null && !proximityAlerted.has(orderId)) {
         const km = distKm({ lat: latitude, lng: longitude }, { lat: clientLat, lng: clientLng });
         const etaMin = (km / speedKmh) * 60;
         if (etaMin <= 5) {
           proximityAlerted.add(orderId);
-          io.to('clients').emit('proximity_alert', {
+          if (clientUserId) io.to(`user:${clientUserId}`).emit('proximity_alert', {
             orderId,
             message: 'Your CALMER delivery is 5 minutes away! Get ready.'
           });
+          io.to('admins').emit('proximity_alert', { orderId, message: `Courier is within 5 minutes of order destination.` });
         }
       }
     });
 
-    socket.on('delivery_started', ({ orderId }) => {
+    socket.on('delivery_started', ({ orderId, clientUserId }) => {
       if (u.role !== 'admin') return;
       proximityAlerted.delete(orderId);
-      io.to('clients').emit('order_update', { orderId, deliveryStatus: 'on_the_way', message: 'Your order is on the way!' });
+      if (clientUserId) io.to(`user:${clientUserId}`).emit('order_update', { orderId, deliveryStatus: 'on_the_way', message: 'Your order is on the way!' });
     });
 
     // Typing indicators (CALMER VIBE)

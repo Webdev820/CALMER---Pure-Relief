@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { Logo } from '../../components/Shared'
+import InstallAppButton from '../../components/InstallApp'
 import { Cart as CartI, Bell, Search, Home, Box, Chat, UserI, Logout, Plus, Minus, Trash, Lock, ArrowR } from '../../utils/icons'
 import api from '../../utils/api'
 
@@ -29,6 +30,7 @@ export function TopBar({ onCart }) {
             onKeyDown={e => e.key === 'Enter' && nav(`/shop?search=${encodeURIComponent(e.target.value)}`)} />
         </div>
         <div className="flex items-center gap-2">
+          <InstallAppButton variant="compact" className="hidden md:flex" />
           <button onClick={openNotifs} aria-label="Notifications" className={`relative w-10 h-10 rounded-full border border-[rgba(255,215,0,0.3)] flex items-center justify-center text-[#FFD700] hover:bg-[#FFD700]/10 transition ${notifCount ? 'bell-shake' : ''}`}>
             <Bell size={18} />
             {notifCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FF5C5C] text-white text-[10px] flex items-center justify-center font-bold">{notifCount}</span>}

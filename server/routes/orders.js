@@ -8,26 +8,73 @@ const router = express.Router();
 router.post('/', auth, async (req, res) => {
   try {
     const { products = [], deliveryAddress = {}, liveLocation } = req.body;
-    if (!products.length) return res.status(400).json({ error: 'No products in order' });
+    if (!Array.isArray(products) || !products.length) return res.status(400).json({ error: 'No products in order' });
+    if (products.length > 50) return res.status(400).json({ error: 'Too many items in one order' });
+    if (!deliveryAddress.street || !deliveryAddress.city)
+      return res.status(400).json({ error: 'Street and city are required' });
+
+    // Merge duplicate lines (same product added twice) before stock checks
+    const wanted = new Map();
+    for (const it of products) {
+      const qty = Math.min(99, Math.max(1, Math.floor(Number(it.quantity) || 1)));
+      wanted.set(String(it.productId), (wanted.get(String(it.productId)) || 0) + qty);
+    }
 
     let total = 0;
     const items = [];
-    for (const it of products) {
-      const p = await Product.findById(it.productId).lean();
-      if (!p) return res.status(400).json({ error: 'Product not found' });
-      const qty = Math.max(1, Number(it.quantity) || 1);
+    const decremented = []; // for rollback if a later item fails
+    for (const [productId, qty] of wanted) {
+      // ATOMIC stock decrement — prevents overselling under concurrent checkouts.
+      const p = await Product.findOneAndUpdate(
+        { _id: productId, stock: { $gte: qty } },
+        { $inc: { stock: -qty } },
+        { new: true }
+      );
+      if (!p) {
+        // Roll back any stock we already took
+        await Promise.all(decremented.map(d => Product.updateOne({ _id: d.id }, { $inc: { stock: d.qty } })));
+        const exists = await Product.findById(productId).select('name stock').lean().catch(() => null);
+        return res.status(exists ? 409 : 400).json({
+          error: exists ? `Not enough stock for ${exists.name} (only ${exists.stock} left)` : 'Product not found'
+        });
+      }
+      decremented.push({ id: p._id, qty });
       total += p.price * qty;
       items.push({ productId: p._id, name: p.name, quantity: qty, price: p.price });
     }
+
+    // Validate pinned coordinates if provided
+    let live = { pinned: false };
+    if (liveLocation && liveLocation.latitude != null && liveLocation.longitude != null) {
+      const lat = Number(liveLocation.latitude), lng = Number(liveLocation.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180)
+        live = { latitude: lat, longitude: lng, pinned: true, timestamp: new Date() };
+    }
+
     const deliveryFee = 10;
-    const order = await Order.create({
-      clientId: req.user.id,
-      products: items,
-      totalAmount: total + deliveryFee,
-      deliveryFee,
-      deliveryAddress,
-      liveLocation: liveLocation ? { ...liveLocation, pinned: true, timestamp: new Date() } : { pinned: false }
-    });
+    // Retry on the (rare but real) random order-number collision instead of 500ing
+    let order, attempts = 0;
+    while (!order && attempts < 5) {
+      try {
+        order = await Order.create({
+          clientId: req.user.id,
+          products: items,
+          totalAmount: Math.round((total + deliveryFee) * 100) / 100,
+          deliveryFee,
+          deliveryAddress: {
+            street: String(deliveryAddress.street).slice(0, 200),
+            city: String(deliveryAddress.city).slice(0, 100),
+            landmark: String(deliveryAddress.landmark || '').slice(0, 200),
+            notes: String(deliveryAddress.notes || '').slice(0, 300)
+          },
+          liveLocation: live
+        });
+      } catch (err) {
+        if (err.code === 11000) { attempts++; continue; } // duplicate orderNumber → regenerate
+        throw err;
+      }
+    }
+    if (!order) throw new Error('order number collision');
     res.status(201).json(order);
   } catch (e) { res.status(500).json({ error: 'Could not create order' }); }
 });
@@ -54,6 +101,8 @@ router.get('/:id', auth, async (req, res) => {
 router.put('/:id/status', auth, adminOnly, async (req, res) => {
   try {
     const { deliveryStatus } = req.body;
+    if (!['pending', 'processing', 'on_the_way', 'delivered'].includes(deliveryStatus))
+      return res.status(400).json({ error: 'Invalid status' });
     const update = { deliveryStatus };
     if (deliveryStatus === 'delivered') update.actualDeliveryTime = new Date();
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
@@ -80,8 +129,9 @@ router.put('/:id/status', auth, adminOnly, async (req, res) => {
 // PUT /api/orders/:id/location  (client pins live location)
 router.put('/:id/location', auth, async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
-    if (latitude == null || longitude == null) return res.status(400).json({ error: 'latitude and longitude required' });
+    const latitude = Number(req.body.latitude), longitude = Number(req.body.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)
+      return res.status(400).json({ error: 'Valid latitude and longitude required' });
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (req.user.role !== 'admin' && String(order.clientId) !== req.user.id)
@@ -107,11 +157,13 @@ router.put('/:id/location', auth, async (req, res) => {
 router.put('/:id/review', auth, async (req, res) => {
   try {
     const { rating, review = '' } = req.body;
+    const r = Number(rating);
+    if (!Number.isInteger(r) || r < 1 || r > 5) return res.status(400).json({ error: 'Rating must be 1-5' });
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (String(order.clientId) !== req.user.id) return res.status(403).json({ error: 'Access denied' });
     if (order.deliveryStatus !== 'delivered') return res.status(400).json({ error: 'Order not yet delivered' });
-    order.rating = rating; order.review = review;
+    order.rating = r; order.review = String(review).slice(0, 1000);
     await order.save();
     res.json(order);
   } catch { res.status(400).json({ error: 'Review failed' }); }

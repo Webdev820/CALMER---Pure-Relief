@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { Loader } from '../../components/Shared'
+import InstallAppButton from '../../components/InstallApp'
 import { Send, UserI, Leaf, Shield, Logout } from '../../utils/icons'
 import api from '../../utils/api'
 
@@ -106,6 +107,9 @@ export function Profile() {
         <p className="text-cream text-sm py-1.5 border-b border-white/5 flex justify-between"><span className="text-muted">Username</span>{user.username}</p>
         <p className="text-cream text-sm py-1.5 border-b border-white/5 flex justify-between"><span className="text-muted">Email</span>{user.email || 'Not set'}</p>
         <p className="text-cream text-sm py-1.5 flex justify-between"><span className="text-muted">Phone</span>{user.phone || 'Not set'}</p>
+      </div>
+      <div className="mt-4">
+        <InstallAppButton variant="bar" />
       </div>
       <div className="glass rounded-2xl p-5 mt-4 text-left">
         <h2 className="gold-text font-serif font-bold mb-2 flex items-center gap-2"><Shield size={16} /> Legal Compliance</h2>

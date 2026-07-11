@@ -16,20 +16,31 @@ export function Logo({ size = 44, showTag = false }) {
 }
 
 export function Toasts() {
-  const { toasts } = useApp()
+  const { toasts, dismissToast } = useApp()
+  const styles = {
+    success: { border: 'border-[#39D98A]/60', icon: 'text-[#39D98A]', title: 'text-[#39D98A]' },
+    error: { border: 'border-[#FF5C5C]/60', icon: 'text-[#FF5C5C]', title: 'text-[#FF5C5C]' },
+    gold: { border: 'border-[#FFD700]/50', icon: 'text-[#FFD700]', title: 'text-[#FFD700]' },
+    info: { border: '', icon: 'text-[#FFD700]', title: 'text-[#FFD700]' },
+  }
   return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-3 w-80 max-w-[90vw]">
-      {toasts.map(t => (
-        <div key={t.id} className={`glass rounded-2xl p-4 toast-in shadow-2xl ${t.type === 'success' ? 'border-[#39D98A]/50' : ''}`}>
-          <div className="flex items-start gap-3">
-            <span className="text-[#FFD700] mt-0.5"><Leaf size={18} /></span>
-            <div className="min-w-0">
-              <p className="text-[#FFD700] font-semibold text-sm">{t.title}</p>
-              <p className="text-cream text-xs mt-0.5 break-words">{t.message}</p>
+    <div className="fixed top-4 right-4 z-[9999] space-y-3 w-80 max-w-[90vw]" role="status" aria-live="polite">
+      {toasts.map(t => {
+        const s = styles[t.type] || styles.info
+        return (
+          <div key={t.id} className={`glass rounded-2xl p-4 toast-in shadow-2xl ${s.border}`}>
+            <div className="flex items-start gap-3">
+              <span className={`${s.icon} mt-0.5 shrink-0`}><Leaf size={18} /></span>
+              <div className="min-w-0 flex-1">
+                <p className={`${s.title} font-semibold text-sm`}>{t.title}</p>
+                <p className="text-cream text-xs mt-0.5 break-words">{t.message}</p>
+              </div>
+              <button onClick={() => dismissToast?.(t.id)} aria-label="Dismiss notification"
+                className="text-muted hover:text-cream shrink-0 -mt-1 -mr-1 p-1"><X size={14} /></button>
             </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

@@ -113,3 +113,43 @@ See the step-by-step deployment guide provided with the project for exact copy-p
 
 ---
 CALMER — Pure Relief. For lawful use in licensed jurisdictions only. 21+
+
+---
+
+## 🚀 100x UPGRADE — What's New
+
+### 📱 INSTALL CALMER APP IN YOUR PHONE (clients AND admins)
+CALMER is now a full **installable PWA**:
+- **Clear golden "INSTALL CALMER APP IN YOUR PHONE" buttons** on: landing hero, landing navbar, mobile menu, client shop TopBar, client Profile page, and the Admin sidebar
+- **Android/Chrome/Edge**: one tap → native install prompt (`beforeinstallprompt` captured before React mounts so it's never missed)
+- **iPhone/iPad Safari**: automatic detection → beautiful 3-step "Add to Home Screen" guide (iOS never fires the install event — handled)
+- **Already installed?** The button hides itself (standalone display-mode detection, incl. iOS `navigator.standalone`)
+- App manifest with shortcuts (Shop / Orders / Vibe / Admin), maskable icons, branded offline page, service worker (network-first navigations, stale-while-revalidate assets, API/socket never cached)
+
+### 🔐 Security hardening
+- Payment confirm/create-intent: **ownership checks** (attacker can no longer pay/inspect another user's order) + **idempotent** (double-confirm can't re-fire admin alerts)
+- Notifications mark-read: scoped to owner
+- Product search: **regex-injection/ReDoS escaped**
+- Login: dedicated brute-force rate limit (25/5min)
+- Chat: empty/2000+ char messages rejected; clients can't forge `system` message types; calls admin-only
+- Sockets: courier position + proximity alerts now sent **only to the order's own client** (was broadcast to every client — privacy leak fixed)
+- helmet + compression + `trust proxy` + graceful shutdown + JWT_SECRET warning
+
+### 📦 Commerce correctness
+- **Atomic stock decrement** with rollback — no overselling under concurrent checkouts; duplicate cart lines merged; qty clamped 1-99
+- Sold-out / "N LEFT" badges in shop; 409 stock errors surfaced nicely at checkout
+- Order-number collision retry (random CLM numbers can collide — now retried, not 500)
+- Coordinate validation (lat ≤90, lng ≤180), address length caps, rating must be int 1-5, status enum validated
+- NEW ARRIVAL broadcast now also fires when toggled on via product **edit**
+
+### ✨ UX / performance
+- Error boundary (branded recovery screen, no white-screen crashes) + golden 404 page
+- Toasts: color-typed (success/error/gold), dismissible, capped at 5, errors last longer
+- 401 redirects admins to `/admin-login` (not client login); socket auth failures exit cleanly
+- Bundle code-split: 646kB monolith → vendor/map/motion/realtime chunks (~52kB gzip core)
+
+## Live URLs
+- **App**: https://3000-ipmw8iifppaiqffx1bns7-c81df28e.sandbox.novita.ai (sandbox)
+- **Health**: `/api/health` (now reports DB state + uptime)
+
+**Last Updated**: 2026-07-11

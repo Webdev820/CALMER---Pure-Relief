@@ -1,6 +1,22 @@
 /* CALMER global styles - dark luxury + gold */
 html { scroll-behavior: smooth; }
-body { background: #0A0A0A; color: #fff; font-family: 'Inter', sans-serif; }
+body {
+  color: #fff; font-family: 'Inter', sans-serif;
+  /* Luxury aurora depth instead of flat black */
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(255,215,0,.06), transparent 60%),
+              radial-gradient(900px 500px at -10% 30%, rgba(255,193,7,.04), transparent 55%),
+              #0A0A0A;
+  background-attachment: fixed;
+}
+
+/* Accessibility: visible golden focus ring for keyboard users only */
+:focus-visible { outline: 2px solid #FFD700; outline-offset: 2px; border-radius: 4px; }
+
+/* Respect users who prefer reduced motion — kills all decorative animation */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  html { scroll-behavior: auto; }
+}
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0A0A0A; }
 ::-webkit-scrollbar-thumb { background: rgba(255,215,0,.3); border-radius: 8px; }
@@ -52,3 +68,29 @@ textarea.field { border-radius: 1rem; }
 .badge { font-size:.65rem; padding:.15rem .55rem; border-radius:9999px; font-weight:600; letter-spacing:.05em; }
 .chat-bubble-me { background: linear-gradient(90deg,#FFD700,#FFC107); color:#0A0A0A; border-radius: 1rem 1rem .25rem 1rem; }
 .chat-bubble-them { background: rgba(255,255,255,.08); border:1px solid rgba(255,215,0,.2); border-radius: 1rem 1rem 1rem .25rem; }
+
+/* Skeleton shimmer — premium loading states instead of bare spinners */
+@keyframes shimmer { 0% { background-position: -400px 0 } 100% { background-position: 400px 0 } }
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,215,0,.08) 50%, rgba(255,255,255,.04) 75%);
+  background-size: 800px 100%; animation: shimmer 1.4s linear infinite; border-radius: 1rem;
+}
+
+/* Typing indicator dots (CALMER VIBE) */
+@keyframes typing-dot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-4px);opacity:1} }
+.typing-dot { width:6px; height:6px; border-radius:9999px; background:#FFD700; display:inline-block; animation: typing-dot 1.2s infinite; }
+.typing-dot:nth-child(2){ animation-delay:.15s } .typing-dot:nth-child(3){ animation-delay:.3s }
+
+/* Gold shimmer sweep on primary CTAs */
+.btn-gold { position: relative; overflow: hidden; }
+.btn-gold::after {
+  content:''; position:absolute; inset:0; transform: translateX(-110%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transition: transform .7s ease;
+}
+.btn-gold:hover::after { transform: translateX(110%) skewX(-18deg); }
+
+/* Safe-area padding for installed PWA (iPhone notch / home indicator) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  nav[aria-label="Main"] { padding-bottom: env(safe-area-inset-bottom); }
+}

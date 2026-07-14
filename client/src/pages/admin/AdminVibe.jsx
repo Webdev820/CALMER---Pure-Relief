@@ -13,6 +13,9 @@ export default function AdminVibe() {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(true)
   const [call, setCall] = useState(null) // { orderId, clientId, clientName, status: 'ringing'|'connected', secs }
+  const [clientTyping, setClientTyping] = useState(null) // orderId currently typing
+  const typingTimer = useRef(null)
+  const lastTypingEmit = useRef(0)
   const pcRef = useRef(null)
   const audioRef = useRef(null)
   const endRef = useRef(null)
@@ -40,14 +43,28 @@ export default function AdminVibe() {
     }
   }, [location.state, convos.length])
 
-  // realtime refresh on new client messages
+  // realtime refresh on new client messages + typing indicator
   useEffect(() => {
     const s = socket()
     if (!s) return
-    const onMsg = () => load()
+    const onMsg = () => { setClientTyping(null); load() }
+    const onTyping = ({ orderId }) => {
+      setClientTyping(orderId)
+      clearTimeout(typingTimer.current)
+      typingTimer.current = setTimeout(() => setClientTyping(null), 3000)
+    }
     s.on('message_received', onMsg)
-    return () => s.off('message_received', onMsg)
+    s.on('typing', onTyping)
+    return () => { s.off('message_received', onMsg); s.off('typing', onTyping); clearTimeout(typingTimer.current) }
   }, [active])
+
+  // Throttled typing signal to the client of the active thread
+  const emitTyping = () => {
+    const now = Date.now()
+    if (now - lastTypingEmit.current < 1500 || !active) return
+    lastTypingEmit.current = now
+    socket()?.emit('typing', { orderId: active.orderId?._id || active.orderId, to: active.clientId?._id })
+  }
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [active?.messages?.length])
 
@@ -187,12 +204,20 @@ export default function AdminVibe() {
                     </div>
                   )
                 })}
+                {clientTyping && String(clientTyping) === String(active.orderId?._id || active.orderId) && (
+                  <div className="flex justify-start">
+                    <div className="chat-bubble-them px-4 py-3 flex items-center gap-1.5">
+                      <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+                      <span className="text-muted text-[10px] ml-2">{active.clientId?.username} is typing</span>
+                    </div>
+                  </div>
+                )}
                 <div ref={endRef} />
               </div>
 
               <footer className="p-4 border-t border-[rgba(255,215,0,0.12)] flex gap-2">
                 <input className="field flex-1" placeholder="Message the client..." value={text}
-                  onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} />
+                  onChange={e => { setText(e.target.value); emitTyping() }} onKeyDown={e => e.key === 'Enter' && send()} />
                 <button onClick={send} className="btn-gold !px-4 flex items-center" aria-label="Send message"><Send size={18} /></button>
               </footer>
             </>

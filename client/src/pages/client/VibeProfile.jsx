@@ -11,7 +11,10 @@ export function Vibe() {
   const [convos, setConvos] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [msg, setMsg] = useState('')
+  const [adminTyping, setAdminTyping] = useState(null) // orderId of the thread being typed in
   const endRef = useRef(null)
+  const typingTimer = useRef(null)
+  const lastTypingEmit = useRef(0)
 
   const load = async () => {
     const { data } = await api.get('/chats')
@@ -22,13 +25,28 @@ export function Vibe() {
     load()
     const s = socket()
     if (!s) return
-    const onMsg = () => load()
+    const onMsg = () => { setAdminTyping(null); load() }
+    const onTyping = ({ orderId }) => {
+      setAdminTyping(orderId)
+      clearTimeout(typingTimer.current)
+      typingTimer.current = setTimeout(() => setAdminTyping(null), 3000)
+    }
     s.on('admin_message', onMsg)
-    return () => s.off('admin_message', onMsg)
+    s.on('typing', onTyping)
+    return () => { s.off('admin_message', onMsg); s.off('typing', onTyping); clearTimeout(typingTimer.current) }
   }, [])
 
+  // Throttled typing signal to the admin (max one emit per 1.5s)
+  const emitTyping = () => {
+    const now = Date.now()
+    if (now - lastTypingEmit.current < 1500) return
+    lastTypingEmit.current = now
+    const active = (convos || []).find(c => c._id === activeId)
+    if (active) socket()?.emit('typing', { orderId: active.orderId?._id || active.orderId, to: 'admin' })
+  }
+
   const active = (convos || []).find(c => c._id === activeId)
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [active?.messages?.length])
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [active?.messages?.length, adminTyping])
 
   const send = async e => {
     e.preventDefault()
@@ -68,10 +86,18 @@ export function Vibe() {
                 </div>
               )
             })}
+            {adminTyping && String(adminTyping) === String(active?.orderId?._id || active?.orderId) && (
+              <div className="flex justify-start">
+                <div className="chat-bubble-them px-4 py-3 flex items-center gap-1.5">
+                  <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+                  <span className="text-muted text-[10px] ml-2">CALMER team is typing</span>
+                </div>
+              </div>
+            )}
             <div ref={endRef} />
           </div>
           <form onSubmit={send} className="p-4 border-t border-[rgba(255,215,0,0.15)] flex gap-3">
-            <input className="field py-3 text-sm" placeholder="Message the CALMER team..." value={msg} onChange={e => setMsg(e.target.value)} />
+            <input className="field py-3 text-sm" placeholder="Message the CALMER team..." value={msg} onChange={e => { setMsg(e.target.value); emitTyping() }} />
             <button aria-label="Send message" className="btn-gold w-12 h-12 rounded-full flex items-center justify-center shrink-0"><Send size={18} /></button>
           </form>
         </div>

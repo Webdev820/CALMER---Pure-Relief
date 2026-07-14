@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
-import { Loader } from '../../components/Shared'
 import api from '../../utils/api'
+
+function ProductSkeleton() {
+  return (
+    <div className="glass rounded-3xl overflow-hidden">
+      <div className="skeleton h-52 !rounded-b-none" />
+      <div className="p-5 space-y-3">
+        <div className="skeleton h-5 w-3/4" />
+        <div className="skeleton h-3 w-full" />
+        <div className="skeleton h-3 w-2/3" />
+        <div className="flex justify-between items-center pt-2">
+          <div className="skeleton h-7 w-16" />
+          <div className="skeleton h-8 w-32 !rounded-full" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const CATEGORIES = ['All', 'Flower', 'Edibles', 'Oils', 'Vapes', 'Concentrates', 'Accessories']
 const CAT_IMG = { Flower: '/assets/products/cat-flower.jpg', Edibles: '/assets/products/cat-edibles.jpg', Concentrates: '/assets/products/cat-concentrates.jpg', Vapes: '/assets/products/cat-vaporizers.jpg' }
@@ -52,7 +68,11 @@ export default function ShopHome() {
         ))}
       </div>
 
-      {!products ? <Loader label="Loading products" /> : (
+      {!products ? (
+        <section className="grid lg:grid-cols-3 sm:grid-cols-2 gap-6" aria-busy="true" aria-label="Loading products">
+          {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
+        </section>
+      ) : (
         <section id="product-grid" className="grid lg:grid-cols-3 sm:grid-cols-2 gap-6">
           {products.map(p => (
             <article key={p._id} className="glass rounded-3xl overflow-hidden card-hover">

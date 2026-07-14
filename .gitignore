@@ -27,3 +27,7 @@ Thumbs.db
 *.tar.gz
 *.zip
 *.bak
+
+# core dumps
+core
+*.core

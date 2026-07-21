@@ -101,7 +101,7 @@ export function CartSidebar({ open, onClose }) {
           {cart.length === 0 && <p className="text-muted text-center py-16">Your cart is empty</p>}
           {cart.map(i => (
             <div key={i._id} className="glass rounded-2xl p-3 flex gap-3">
-              <img src={i.imageUrl} alt={i.name} className="w-20 h-20 rounded-xl object-cover border border-[rgba(255,215,0,0.2)]" />
+              <img src={i.imageUrl} alt={i.name} className="w-20 h-20 rounded-xl object-contain bg-[#050505] border border-[rgba(255,215,0,0.2)]" />
               <div className="flex-1 min-w-0">
                 <p className="gold-text text-sm font-semibold truncate">{i.name}</p>
                 <p className="text-cream font-serif text-lg">${(i.price * i.quantity).toFixed(2)}</p>

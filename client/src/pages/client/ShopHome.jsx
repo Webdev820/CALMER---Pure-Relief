@@ -21,7 +21,7 @@ function ProductSkeleton() {
 }
 
 const CATEGORIES = ['All', 'Flower', 'Edibles', 'Oils', 'Vapes', 'Concentrates', 'Accessories']
-const CAT_IMG = { Flower: '/assets/products/cat-flower.jpg', Edibles: '/assets/products/cat-edibles.jpg', Concentrates: '/assets/products/cat-concentrates.jpg', Vapes: '/assets/products/cat-vaporizers.jpg' }
+const CAT_IMG = { Flower: '/assets/products/golden-serenity.jpg', Edibles: '/assets/products/gummies.jpg', Oils: '/assets/products/cbd-tincture.jpg', Concentrates: '/assets/products/thc-diamonds.jpg', Vapes: '/assets/products/vaporizer.jpg', Accessories: '/assets/products/rolling-tray.jpg' }
 
 export default function ShopHome() {
   const { addToCart } = useApp()
@@ -47,8 +47,9 @@ export default function ShopHome() {
           <div className="flex gap-4 overflow-x-auto pb-2">
             {newArrivals.map(p => (
               <button key={p._id} onClick={() => nav(`/shop/checkout?product=${p._id}`)} className="shrink-0 w-44 text-left group">
-                <div className="relative img-zoom rounded-2xl h-40 border border-[rgba(255,215,0,0.28)]">
-                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover rounded-2xl" loading="lazy" />
+                <div className="relative img-zoom rounded-2xl h-40 border border-[rgba(255,215,0,0.28)] bg-[#050505]">
+                  <div className="absolute inset-0 rounded-2xl bg-cover bg-center blur-xl scale-110 opacity-40" style={{ backgroundImage: `url(${p.imageUrl})` }} aria-hidden="true" />
+                  <img src={p.imageUrl} alt={p.name} className="relative w-full h-full object-contain rounded-2xl" loading="lazy" />
                   <span className="absolute top-2 left-2 badge gold-grad">NEW</span>
                 </div>
                 <p className="gold-text text-sm font-semibold mt-2 truncate group-hover:underline">{p.name}</p>
@@ -76,8 +77,9 @@ export default function ShopHome() {
         <section id="product-grid" className="grid lg:grid-cols-3 sm:grid-cols-2 gap-6">
           {products.map(p => (
             <article key={p._id} className="glass rounded-3xl overflow-hidden card-hover">
-              <div className="img-zoom h-52 relative">
-                <img src={p.imageUrl || CAT_IMG[p.category] || '/assets/products/cat-flower.jpg'} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+              <div className="img-zoom h-52 relative bg-[#050505]">
+                <div className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-40" style={{ backgroundImage: `url(${p.imageUrl || CAT_IMG[p.category] || '/assets/products/golden-serenity.jpg'})` }} aria-hidden="true" />
+                <img src={p.imageUrl || CAT_IMG[p.category] || '/assets/products/golden-serenity.jpg'} alt={p.name} className="relative w-full h-full object-contain" loading="lazy" />
                 {p.isNewArrival && <span className="absolute top-3 left-3 badge gold-grad">NEW</span>}
                 {p.stock === 0
                   ? <span className="absolute top-3 right-3 badge bg-black/80 text-[#FF5C5C] border border-[#FF5C5C]/60">SOLD OUT</span>

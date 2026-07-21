@@ -8,11 +8,15 @@ import api from '../utils/api'
 function AuthShell({ children, admin = false }) {
   return (
     <div className="min-h-screen relative flex items-end md:items-center justify-center overflow-hidden bg-[#0A0A0A]">
-      {/* Cinematic golden bicycle backdrop (client-provided image) */}
+      {/* Cinematic golden CALMER bicycle backdrop (client-provided clean brand image) */}
       <div className="absolute inset-0">
+        {/* Blurred fill layer - seamless edge-to-edge on any screen size */}
+        <div className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-60"
+          style={{ backgroundImage: 'url(/assets/login-bike.jpg)' }} aria-hidden="true" />
+        {/* Sharp full image - never cropped, never over-zoomed */}
         <img src="/assets/login-bike.jpg" alt="" aria-hidden="true"
-          className="w-full h-full object-cover object-top opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/95" />
+          className="relative w-full h-full object-contain opacity-95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/95" />
       </div>
       <div className="relative z-10 w-full max-w-md px-5 py-10">
         <div className="text-center mb-6">

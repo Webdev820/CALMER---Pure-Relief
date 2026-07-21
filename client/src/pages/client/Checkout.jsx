@@ -109,7 +109,7 @@ export default function Checkout() {
           {items.length === 0 && <p className="text-muted text-sm">No items. <Link to="/shop" className="gold-text underline">Browse products</Link></p>}
           {items.map(i => (
             <div key={i._id} className="flex gap-3 py-3 border-b border-white/5">
-              <img src={i.imageUrl} alt={i.name} className="w-16 h-16 rounded-xl object-cover border border-[rgba(255,215,0,0.2)]" />
+              <img src={i.imageUrl} alt={i.name} className="w-16 h-16 rounded-xl object-contain bg-[#050505] border border-[rgba(255,215,0,0.2)]" />
               <div className="flex-1">
                 <p className="gold-text text-sm font-semibold">{i.name}</p>
                 <p className="text-muted text-xs">Qty: {i.quantity}</p>

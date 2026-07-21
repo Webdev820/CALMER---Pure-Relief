@@ -5,7 +5,7 @@
    - Same-origin static assets (icons, images, built JS/CSS): stale-while-revalidate
    - Cross-origin (map tiles, fonts, CDNs): pass through untouched
 */
-const VERSION = 'calmer-v2';
+const VERSION = 'calmer-v3'; // v3: new clean CALMER brand product images
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const OFFLINE_URL = '/offline.html';

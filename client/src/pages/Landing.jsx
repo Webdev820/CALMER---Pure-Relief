@@ -18,13 +18,13 @@ const FEATURES = [
 ]
 
 const PRODUCTS = [
-  { name: 'Golden Serenity Indica Flower', desc: 'Premium indoor flower, 28% THC, perfect for deep relaxation', price: 65, img: '/assets/products/zkittlez.jpg' },
-  { name: 'Wellness CBD Tincture 1000mg', desc: 'Full-spectrum CBD oil for anxiety relief and balance', price: 85, img: '/assets/products/cbd-oil-1000.jpg' },
-  { name: 'Artisan Cannabis Chocolate Bar', desc: 'Gourmet dark chocolate infused with 100mg THC', price: 40, img: '/assets/products/chocolate.jpg' },
+  { name: 'Golden Serenity Indica Flower', desc: 'Premium indoor flower, 20% THC, perfect for deep relaxation', price: 65, img: '/assets/products/golden-serenity.jpg' },
+  { name: 'Wellness CBD Tincture 1000mg', desc: 'Full-spectrum CBD oil for anxiety relief and balance', price: 85, img: '/assets/products/cbd-tincture.jpg' },
+  { name: 'Artisan Cannabis Chocolate 100mg', desc: 'Gourmet dark chocolate infused with 100mg THC', price: 40, img: '/assets/products/chocolate.jpg' },
 ]
 
 const STEPS = [
-  { n: 1, icon: <Cart size={26} />, title: 'Browse & Select', desc: 'Explore our curated selection of premium cannabis products', img: '/assets/products/cat-flower.jpg' },
+  { n: 1, icon: <Cart size={26} />, title: 'Browse & Select', desc: 'Explore our curated selection of premium cannabis products', img: '/assets/products/pre-rolls.jpg' },
   { n: 2, icon: <Lock size={26} />, title: 'Secure Checkout', desc: 'Age verification, encrypted payment, and discreet billing', img: '/assets/payment.jpg' },
   { n: 3, icon: <Bike size={26} />, title: 'Eco-Delivery', desc: 'Our silent bicycle couriers deliver within 30 minutes', img: '/assets/tracking-rider.jpg' },
   { n: 4, icon: <Leaf size={26} />, title: 'Breathe, Unwind, Elevate', desc: 'Enjoy therapeutic relief in the comfort of your sanctuary', img: '/assets/review.jpg' },
@@ -186,8 +186,9 @@ export default function Landing() {
           <div className="st-stagger grid md:grid-cols-3 gap-8">
             {PRODUCTS.map(p => (
               <article key={p.name} className="glass rounded-3xl overflow-hidden card-hover shadow-xl">
-                <div className="img-zoom h-64">
-                  <img src={p.img} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                <div className="img-zoom h-64 relative bg-[#050505]">
+                  <div className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-40" style={{ backgroundImage: `url(${p.img})` }} aria-hidden="true" />
+                  <img src={p.img} alt={p.name} className="relative w-full h-full object-contain" loading="lazy" />
                 </div>
                 <div className="p-6">
                   <h3 className="font-serif text-xl gold-text font-bold">{p.name}</h3>
@@ -244,7 +245,10 @@ export default function Landing() {
           <div className="st-stagger grid md:grid-cols-4 sm:grid-cols-2 gap-6 relative">
             {STEPS.map(s => (
               <article key={s.n} className="glass rounded-2xl overflow-hidden card-hover">
-                <div className="img-zoom h-40"><img src={s.img} alt={s.title} className="w-full h-full object-cover" loading="lazy" /></div>
+                <div className="img-zoom h-40 relative bg-[#050505]">
+                  <div className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-40" style={{ backgroundImage: `url(${s.img})` }} aria-hidden="true" />
+                  <img src={s.img} alt={s.title} className="relative w-full h-full object-contain" loading="lazy" />
+                </div>
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="w-9 h-9 rounded-full gold-grad flex items-center justify-center font-bold text-sm">{s.n}</span>

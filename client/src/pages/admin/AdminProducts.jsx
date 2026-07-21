@@ -4,7 +4,7 @@ import { Loader, Modal } from '../../components/Shared.jsx'
 import { Plus, Edit, Trash, Leaf, Star } from '../../utils/icons.jsx'
 
 const CATEGORIES = ['Flower', 'Edibles', 'Oils', 'Vapes', 'Concentrates', 'Accessories']
-const EMPTY = { name: '', description: '', price: '', category: 'Flower', thcContent: '', cbdContent: '', imageUrl: '/assets/products/zkittlez.jpg', stock: 50, featured: false, isNewArrival: false }
+const EMPTY = { name: '', description: '', price: '', category: 'Flower', thcContent: '', cbdContent: '', imageUrl: '/assets/products/golden-serenity.jpg', stock: 50, featured: false, isNewArrival: false }
 
 export default function AdminProducts() {
   const { api, toast } = useApp()
@@ -64,8 +64,9 @@ export default function AdminProducts() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {products.map(p => (
           <article key={p._id} className="glass rounded-2xl overflow-hidden card-hover">
-            <div className="relative h-40 overflow-hidden">
-              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover img-zoom" />
+            <div className="relative h-40 overflow-hidden bg-[#050505]">
+              <div className="absolute inset-0 bg-cover bg-center blur-xl scale-110 opacity-40" style={{ backgroundImage: `url(${p.imageUrl})` }} aria-hidden="true" />
+              <img src={p.imageUrl} alt={p.name} className="relative w-full h-full object-contain img-zoom" />
               {p.isNewArrival && <span className="absolute top-3 left-3 bg-rich-gold text-deep-black text-[10px] font-bold px-2 py-1 rounded-full">NEW ARRIVAL</span>}
               <span className="absolute top-3 right-3 bg-black/70 text-cream text-[10px] px-2 py-1 rounded-full">{p.category}</span>
             </div>
@@ -132,7 +133,7 @@ export default function AdminProducts() {
               </label>
               {form.imageUrl && (
                 <div className="sm:col-span-2 flex items-center gap-3">
-                  <img src={form.imageUrl} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-[rgba(255,215,0,0.3)]" onError={e => e.target.style.opacity = .2} />
+                  <img src={form.imageUrl} alt="preview" className="w-20 h-20 rounded-xl object-contain bg-[#050505] border border-[rgba(255,215,0,0.3)]" onError={e => e.target.style.opacity = .2} />
                   <p className="text-xs text-muted">Image preview. Use /assets/products/* paths or any hosted image URL.</p>
                 </div>
               )}

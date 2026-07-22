@@ -5,7 +5,7 @@
    - Same-origin static assets (icons, images, built JS/CSS): stale-while-revalidate
    - Cross-origin (map tiles, fonts, CDNs): pass through untouched
 */
-const VERSION = 'calmer-v3'; // v3: new clean CALMER brand product images
+const VERSION = 'calmer-v4'; // v4: cinematic scroll-scrub hero video + clean CALMER brand images
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const OFFLINE_URL = '/offline.html';
@@ -46,6 +46,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;                 // leave CDNs/tiles/fonts alone
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return; // live data only
+  if (url.pathname.endsWith('.mp4') || req.destination === 'video') return; // videos stream via range requests - never intercept
 
   // SPA navigations: network-first → cached shell → offline page
   if (req.mode === 'navigate') {

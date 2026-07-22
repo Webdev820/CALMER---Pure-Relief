@@ -10,6 +10,91 @@ import api from '../utils/api'
 
 gsap.registerPlugin(ScrollTrigger)
 
+/* ============ CINEMATIC SCROLL-SCRUB HERO VIDEO ============
+   Client-provided 3D animated CALMER video (already edited + upscaled — served as-is).
+   Scroll DOWN  → video plays forward (golden ganja transforms).
+   Scroll UP    → video plays in reverse, back to the start.
+   Implemented by mapping page scroll progress onto video.currentTime
+   with a smoothed GSAP tween — buttery premium scrubbing, zero controls. */
+function ScrollVideo() {
+  const videoRef = useRef(null)
+  const wrapRef = useRef(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    let trigger
+    const proxy = { t: 0 }
+
+    const setup = () => {
+      const duration = video.duration
+      if (!duration || trigger) return
+      trigger = ScrollTrigger.create({
+        trigger: document.documentElement,
+        start: 'top top',
+        end: 'max',
+        scrub: 0.6,
+        onUpdate: self => {
+          gsap.to(proxy, {
+            t: self.progress * duration,
+            duration: 0.35,
+            ease: 'power1.out',
+            overwrite: true,
+            onUpdate: () => {
+              if (Math.abs(video.currentTime - proxy.t) > 0.01) video.currentTime = proxy.t
+            }
+          })
+        }
+      })
+    }
+
+    // iOS/Android unlock: a silent play/pause on first touch enables programmatic seeking
+    const unlock = () => {
+      video.play().then(() => video.pause()).catch(() => {})
+      window.removeEventListener('touchstart', unlock)
+    }
+    window.addEventListener('touchstart', unlock, { once: true, passive: true })
+
+    if (video.readyState >= 1) setup()
+    video.addEventListener('loadedmetadata', setup)
+    return () => {
+      video.removeEventListener('loadedmetadata', setup)
+      window.removeEventListener('touchstart', unlock)
+      if (trigger) trigger.kill()
+    }
+  }, [])
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <div className="absolute -inset-8 bg-gradient-to-tr from-[#FFD700]/25 to-transparent blur-3xl rounded-full" aria-hidden="true" />
+      <div className="relative mx-auto max-w-[420px]">
+        {/* Golden cinematic frame */}
+        <div className="relative rounded-3xl overflow-hidden border border-[rgba(255,215,0,0.35)] shadow-2xl shadow-[#FFD700]/30 bg-[#050505]">
+          <video
+            ref={videoRef}
+            id="hero-scroll-video"
+            src="/assets/hero-video.mp4"
+            className="w-full h-auto block"
+            muted
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+            controlsList="nodownload noplaybackrate nofullscreen"
+            aria-label="CALMER cinematic 3D animation — scroll to play"
+          />
+          {/* Subtle premium vignette that never blocks the video */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/35 via-transparent to-black/20" aria-hidden="true" />
+          <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none" aria-hidden="true">
+            <span className="text-[10px] tracking-[.3em] uppercase text-[#FFD700]/80 bg-black/50 backdrop-blur px-3 py-1 rounded-full border border-[#FFD700]/25">
+              Scroll to Experience
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const FEATURES = [
   { icon: <Leaf size={30} />, title: 'Premium Quality', desc: 'Lab-tested, organic cannabis from trusted sources' },
   { icon: <Bike size={30} />, title: 'Eco-Friendly Delivery', desc: 'Silent bicycle couriers for discreet, sustainable service' },
@@ -145,13 +230,8 @@ export default function Landing() {
               <p className="text-muted text-[11px] text-center mt-2 tracking-wide">Free • Works offline • Live order alerts • iPhone & Android</p>
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-8 bg-gradient-to-tr from-[#FFD700]/20 to-transparent blur-3xl rounded-full" />
-            <div className="hero-img breathe relative" style={{ perspective: '1000px' }}>
-              <img src="/assets/hero-delivery.jpg" alt="CALMER premium cannabis delivery collection"
-                className="w-full rounded-3xl shadow-2xl shadow-[#FFD700]/30 object-cover border border-[rgba(255,215,0,0.28)]"
-                style={{ transform: 'rotateY(-5deg)' }} loading="eager" />
-            </div>
+          <div className="hero-img relative">
+            <ScrollVideo />
           </div>
         </div>
       </section>

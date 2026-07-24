@@ -22,41 +22,42 @@ function ScrollVideo() {
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    const wrap = wrapRef.current
+    if (!video || !wrap) return
     let trigger
-    const proxy = { t: 0 }
 
     const setup = () => {
-      const duration = video.duration
-      if (!duration || trigger) return
+      if (!video.duration || trigger) return
+      // Prime the decoder so the first golden-leaf frame renders instantly
+      try { video.currentTime = 0.001 } catch { /* noop */ }
       trigger = ScrollTrigger.create({
-        trigger: document.documentElement,
-        start: 'top top',
-        end: 'max',
-        scrub: 0.6,
+        // Absolute scroll mapping: progress starts at the VERY FIRST scrolled pixel
+        // and the full leaf -> Bob Marley transformation completes while the
+        // artwork is still on screen (about 70% of the video block scrolled past).
+        start: 0,
+        end: () => {
+          const r = wrap.getBoundingClientRect()
+          const top = r.top + window.scrollY
+          return Math.max(320, top + r.height * 0.7)
+        },
+        scrub: 0.2,          // near-instant response, buttery smooth
+        invalidateOnRefresh: true,
         onUpdate: self => {
-          gsap.to(proxy, {
-            t: self.progress * duration,
-            duration: 0.35,
-            ease: 'power1.out',
-            overwrite: true,
-            onUpdate: () => {
-              if (Math.abs(video.currentTime - proxy.t) > 0.01) video.currentTime = proxy.t
-            }
-          })
+          const t = self.progress * Math.max(0, video.duration - 0.05)
+          if (Math.abs(video.currentTime - t) > 0.015) video.currentTime = t
         }
       })
     }
 
     // iOS/Android unlock: a silent play/pause on first touch enables programmatic seeking
     const unlock = () => {
-      video.play().then(() => video.pause()).catch(() => {})
-      window.removeEventListener('touchstart', unlock)
+      video.play().then(() => { video.pause(); video.currentTime = Math.max(0.001, video.currentTime) }).catch(() => {})
     }
     window.addEventListener('touchstart', unlock, { once: true, passive: true })
 
     if (video.readyState >= 1) setup()
     video.addEventListener('loadedmetadata', setup)
+    video.load()
     return () => {
       video.removeEventListener('loadedmetadata', setup)
       window.removeEventListener('touchstart', unlock)
@@ -65,31 +66,28 @@ function ScrollVideo() {
   }, [])
 
   return (
-    <div ref={wrapRef} className="relative">
-      <div className="absolute -inset-8 bg-gradient-to-tr from-[#FFD700]/25 to-transparent blur-3xl rounded-full" aria-hidden="true" />
-      <div className="relative mx-auto max-w-[420px]">
-        {/* Golden cinematic frame */}
-        <div className="relative rounded-3xl overflow-hidden border border-[rgba(255,215,0,0.35)] shadow-2xl shadow-[#FFD700]/30 bg-[#050505]">
-          <video
-            ref={videoRef}
-            id="hero-scroll-video"
-            src="/assets/hero-video.mp4"
-            className="w-full h-auto block"
-            muted
-            playsInline
-            preload="auto"
-            disablePictureInPicture
-            controlsList="nodownload noplaybackrate nofullscreen"
-            aria-label="CALMER cinematic 3D animation — scroll to play"
-          />
-          {/* Subtle premium vignette that never blocks the video */}
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/35 via-transparent to-black/20" aria-hidden="true" />
-          <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none" aria-hidden="true">
-            <span className="text-[10px] tracking-[.3em] uppercase text-[#FFD700]/80 bg-black/50 backdrop-blur px-3 py-1 rounded-full border border-[#FFD700]/25">
-              Scroll to Experience
-            </span>
-          </div>
-        </div>
+    /* Full-width cinematic artwork at the top of the hero - golden ganja leaf
+       transforms into Bob Marley smoke art as the client scrolls down,
+       and reverses back to the golden leaf when scrolling up. */
+    <div ref={wrapRef} className="relative w-full h-[55vh] md:h-[70vh] overflow-hidden" aria-label="CALMER cinematic 3D animation - scroll to play">
+      <video
+        ref={videoRef}
+        id="hero-scroll-video"
+        src="/assets/hero-video.mp4"
+        className="absolute inset-0 w-full h-full object-contain"
+        muted
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        controlsList="nodownload noplaybackrate nofullscreen"
+      />
+      {/* Seamless blend of the video's black canvas into the page background */}
+      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 120px 60px #0A0A0A' }} aria-hidden="true" />
+      <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none bg-gradient-to-b from-transparent to-[#0A0A0A]" aria-hidden="true" />
+      <div className="absolute bottom-2 inset-x-0 flex justify-center pointer-events-none" aria-hidden="true">
+        <span className="text-[10px] tracking-[.3em] uppercase text-[#FFD700]/70 bg-black/40 backdrop-blur px-3 py-1 rounded-full border border-[#FFD700]/20">
+          Scroll to Experience
+        </span>
       </div>
     </div>
   )
@@ -122,36 +120,15 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [reviews, setReviews] = useState([])
   const root = useRef(null)
-  const assembledRef = useRef(null)
-  const explodeRef = useRef(null)
 
   const orderNow = () => nav(user ? (user.role === 'admin' ? '/admin' : '/shop') : '/login')
 
   useEffect(() => {
-    // Cinematic assemble/explode golden ganja leaf - crossfades with scroll progress.
-    // Scroll DOWN -> leaf explodes into golden smoke (scales up).
-    // Scroll UP -> smoke reassembles back into the solid golden leaf.
-    let raf = 0
-    const onScroll = () => {
-      setScrolled(window.scrollY > 40)
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
-        const p = Math.min(1, window.scrollY / (max * 0.6)) // full explosion by 60% scroll depth
-        if (assembledRef.current) {
-          assembledRef.current.style.opacity = String(0.16 * (1 - p))
-          assembledRef.current.style.transform = `translate(-50%,-50%) scale(${1 + p * 0.25}) rotate(${p * 8}deg)`
-        }
-        if (explodeRef.current) {
-          explodeRef.current.style.opacity = String(0.22 * p)
-          explodeRef.current.style.transform = `translate(-50%,-50%) scale(${0.85 + p * 0.55}) rotate(${-p * 6}deg)`
-        }
-      })
-    }
+    const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
     api.get('/reviews/public').then(r => setReviews(r.data)).catch(() => { })
-    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf) }
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -170,16 +147,6 @@ export default function Landing() {
 
   return (
     <div ref={root} className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
-      {/* ============ CINEMATIC ASSEMBLE / EXPLODE LEAF BACKDROP ============ */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <img ref={assembledRef} src="/assets/leaf-assembled.jpg" alt=""
-          className="absolute top-1/2 left-1/2 w-[110vmin] max-w-none will-change-transform"
-          style={{ opacity: 0.16, transform: 'translate(-50%,-50%)', mixBlendMode: 'screen', transition: 'opacity .15s linear' }} />
-        <img ref={explodeRef} src="/assets/leaf-explode.jpg" alt=""
-          className="absolute top-1/2 left-1/2 w-[130vmin] max-w-none will-change-transform"
-          style={{ opacity: 0, transform: 'translate(-50%,-50%) scale(.85)', mixBlendMode: 'screen', transition: 'opacity .15s linear' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/70 via-transparent to-[#0A0A0A]/80" />
-      </div>
       <div className="relative z-10">
       {/* ============ NAVBAR ============ */}
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'bg-black/90 backdrop-blur-lg shadow-lg shadow-[#FFD700]/10' : 'bg-transparent'}`}>
@@ -210,8 +177,14 @@ export default function Landing() {
       </header>
 
       {/* ============ HERO ============ */}
-      <section id="home" className="relative pt-32 pb-20 px-5">
+      <section id="home" className="relative pt-20 pb-20 px-5">
         <div className="absolute inset-0 opacity-[0.05] bg-cover bg-center pointer-events-none" style={{ backgroundImage: "url(/assets/why-choose.jpg)" }} />
+        {/* Full-width cinematic scroll-scrub video artwork - THE hero visual.
+            Golden ganja leaf at rest; scrolling down plays the transformation
+            into Bob Marley smoke art; scrolling up reverses it back. */}
+        <div className="hero-video-wrap relative -mx-5 mb-10">
+          <ScrollVideo />
+        </div>
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center relative">
           <div>
             <h1 className="hero-anim font-serif text-5xl md:text-7xl font-bold gold-grad-text leading-tight drop-shadow-lg">
@@ -231,7 +204,14 @@ export default function Landing() {
             </div>
           </div>
           <div className="hero-img relative">
-            <ScrollVideo />
+            <div className="relative rounded-3xl overflow-hidden border border-[rgba(255,215,0,0.28)] shadow-2xl bg-[#050505]">
+              <div className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-40" style={{ backgroundImage: 'url(/assets/hero-delivery.jpg)' }} aria-hidden="true" />
+              <img src="/assets/hero-delivery.jpg" alt="CALMER app - order premium cannabis for eco-friendly bicycle delivery"
+                className="relative w-full max-h-[70vh] object-contain" />
+            </div>
+            <div className="absolute -bottom-4 -right-2 glass rounded-2xl px-5 py-3 border border-[rgba(255,215,0,0.3)]">
+              <p className="gold-text font-bold text-sm flex items-center gap-2"><Bike size={18} /> 30-min Eco Delivery</p>
+            </div>
           </div>
         </div>
       </section>

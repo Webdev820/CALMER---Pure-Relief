@@ -118,6 +118,13 @@ CALMER — Pure Relief. For lawful use in licensed jurisdictions only. 21+
 
 ## 🚀 100x UPGRADE — What's New
 
+### 🎬 Cinematic Scroll-Scrub Hero Video
+- Client's 3D animated CALMER video (golden ganja leaf → Bob Marley smoke art) is now the **full-width hero artwork at the top of the landing page** — served byte-identical, never re-encoded
+- **Scroll down → the video plays forward**; **scroll up → it plays in reverse** back to the golden leaf (GSAP ScrollTrigger scrubbing mapped to `video.currentTime`)
+- Scrubbing starts at the **very first scrolled pixel** and the full transformation completes while the artwork is still on screen
+- iOS/Android touch-unlock (silent play/pause) enables programmatic seeking on mobile; service worker never intercepts `.mp4` so range streaming (HTTP 206) works
+- Phone-mockup delivery image restored beside the hero copy, per the reference design
+
 ### 📱 INSTALL CALMER APP IN YOUR PHONE (clients AND admins)
 CALMER is now a full **installable PWA**:
 - **Clear golden "INSTALL CALMER APP IN YOUR PHONE" buttons** on: landing hero, landing navbar, mobile menu, client shop TopBar, client Profile page, and the Admin sidebar
@@ -152,4 +159,4 @@ CALMER is now a full **installable PWA**:
 - **App**: https://3000-ipmw8iifppaiqffx1bns7-c81df28e.sandbox.novita.ai (sandbox)
 - **Health**: `/api/health` (now reports DB state + uptime)
 
-**Last Updated**: 2026-07-11
+**Last Updated**: 2026-07-24

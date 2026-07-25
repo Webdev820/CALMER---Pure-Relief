@@ -69,12 +69,12 @@ function ScrollVideo() {
     /* Full-width cinematic artwork at the top of the hero - golden ganja leaf
        transforms into Bob Marley smoke art as the client scrolls down,
        and reverses back to the golden leaf when scrolling up. */
-    <div ref={wrapRef} className="relative w-full h-[55vh] md:h-[70vh] overflow-hidden" aria-label="CALMER cinematic 3D animation - scroll to play">
+    <div ref={wrapRef} className="relative w-full h-[62vh] md:h-[80vh] overflow-hidden" aria-label="CALMER cinematic 3D animation">
       <video
         ref={videoRef}
         id="hero-scroll-video"
         src="/assets/hero-video.mp4"
-        className="absolute inset-0 w-full h-full object-contain"
+        className="absolute inset-0 w-full h-full object-cover object-center"
         muted
         playsInline
         preload="auto"
@@ -82,13 +82,8 @@ function ScrollVideo() {
         controlsList="nodownload noplaybackrate nofullscreen"
       />
       {/* Seamless blend of the video's black canvas into the page background */}
-      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 120px 60px #0A0A0A' }} aria-hidden="true" />
-      <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none bg-gradient-to-b from-transparent to-[#0A0A0A]" aria-hidden="true" />
-      <div className="absolute bottom-2 inset-x-0 flex justify-center pointer-events-none" aria-hidden="true">
-        <span className="text-[10px] tracking-[.3em] uppercase text-[#FFD700]/70 bg-black/40 backdrop-blur px-3 py-1 rounded-full border border-[#FFD700]/20">
-          Scroll to Experience
-        </span>
-      </div>
+      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 140px 70px #0A0A0A' }} aria-hidden="true" />
+      <div className="absolute bottom-0 inset-x-0 h-20 pointer-events-none bg-gradient-to-b from-transparent to-[#0A0A0A]" aria-hidden="true" />
     </div>
   )
 }

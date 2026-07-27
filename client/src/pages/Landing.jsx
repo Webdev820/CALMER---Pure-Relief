@@ -69,7 +69,9 @@ function ScrollVideo() {
     /* Full-width cinematic artwork at the top of the hero - golden ganja leaf
        transforms into Bob Marley smoke art as the client scrolls down,
        and reverses back to the golden leaf when scrolling up. */
-    <div ref={wrapRef} className="relative w-full h-[62vh] md:h-[80vh] overflow-hidden" aria-label="CALMER cinematic 3D animation">
+    /* Medium premium framing - matches the client's red-box reference:
+       centered artwork ~55% of the viewport width, edges melting into darkness. */
+    <div ref={wrapRef} className="relative w-full max-w-[540px] md:max-w-[600px] lg:max-w-[660px] mx-auto h-[52vh] md:h-[64vh] overflow-hidden" aria-label="CALMER cinematic 3D animation">
       <video
         ref={videoRef}
         id="hero-scroll-video"
